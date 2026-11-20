@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KK Smart Kirana Store - Retail & Stock Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="top-bar">
+    <div class="shop-title">
+      <div class="shop-logo">KK</div>
+      <div>
+        <h1>KK Smart Kirana Store</h1>
+        <p>Retail Billing, Inventory & Pending Dues Management</p>
+      </div>
+    </div>
+    <div class="header-btns">
+      <button class="btn secondary-btn" onclick="downloadStockCSV()">Export Stock CSV</button>
+      <button class="btn secondary-btn" onclick="downloadSalesCSV()">Export Sales CSV</button>
+    </div>
+  </header>
+
+  <!-- MAIN DASHBOARD VIEW -->
+  <main id="dashboardView" class="page-wrap">
+    <div class="summary-row">
+      <div class="box">
+        <p class="box-title">Total Items</p>
+        <h2 id="itemCount">0</h2>
+        <span class="sub-text">Available products</span>
+      </div>
+      <div class="box">
+        <p class="box-title">Total Stock Worth</p>
+        <h2 id="stockWorth">Rs. 0</h2>
+        <span class="sub-text">Current inventory value</span>
+      </div>
+      <div class="box">
+        <p class="box-title">Paid Sales</p>
+        <h2 id="paidTotal" class="green-txt">Rs. 0</h2>
+        <span class="sub-text">Cash & UPI received</span>
+      </div>
+      <div class="box">
+        <p class="box-title">Pending Udhaar</p>
+        <h2 id="dueTotal" class="red-txt">Rs. 0</h2>
+        <span id="lowStockMsg" class="sub-text">0 items low stock</span>
+      </div>
+    </div>
+
+    <div class="workspace">
+      <!-- left side: billing and udhaar -->
+      <div class="left-panel">
+        <div class="panel-card">
+          <h3>Customer Billing</h3>
+          <div class="input-group">
+            <input type="text" id="custName" placeholder="Customer Name">
+            <input type="text" id="custMobile" placeholder="Mobile Number" maxlength="10">
+          </div>
+
+          <div class="input-group">
+            <select id="itemDropdown"></select>
+            <input type="number" id="itemQty" value="1" min="1" placeholder="Qty">
+            <button class="btn primary-btn" onclick="addItemToBill()">Add Item</button>
+          </div>
+
+          <div class="table-box">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Price</th>
+                  <th>Qty</th>
+                  <th>Amount</th>
+                  <th>Remove</th>
+                </tr>
+              </thead>
+              <tbody id="billCartBody">
+                <tr><td colspan="5" class="center-msg">No items added yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="checkout-bar">
+            <div class="total-display">
+              Total Bill: <strong id="billGrandTotal">Rs. 0</strong>
+            </div>
+            <button class="btn green-btn" onclick="openBillPage()">Proceed to Bill &rarr;</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <h3>Pending Udhaar Register</h3>
+          <div class="table-box">
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Mobile</th>
+                  <th>Purchased Items</th>
+                  <th>Due</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="udhaarListBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- right side: stock table -->
+      <div class="right-panel">
+        <div class="panel-card">
+          <div class="panel-head">
+            <h3>Store Inventory</h3>
+            <input type="text" id="searchBox" class="search-input" placeholder="Search product..." onkeyup="showInventory()">
+          </div>
+
+          <form class="new-item-form" onsubmit="saveNewProduct(event)">
+            <input type="text" id="newProdName" placeholder="Product Name" required>
+            <select id="newProdCat">
+              <option value="Atta & Rice">Atta & Rice</option>
+              <option value="Oil & Ghee">Oil & Ghee</option>
+              <option value="Dal & Masala">Dal & Masala</option>
+              <option value="Tea & Dairy">Tea & Dairy</option>
+              <option value="Snacks">Snacks</option>
+              <option value="Home Care">Home Care</option>
+            </select>
+            <input type="number" id="newProdPrice" placeholder="Price (Rs)" min="1" required>
+            <input type="number" id="newProdQty" placeholder="Qty" min="1" required>
+            <button type="submit" class="btn primary-btn">Add Stock</button>
+          </form>
+
+          <div class="table-box">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Category</th>
+                  <th>Rate</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="stockTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- NEXT PAGE: FULL CUSTOMER INVOICE & PAYMENT VIEW -->
+  <section id="invoicePageView" class="page-wrap hidden">
+    <div class="invoice-card">
+      <div class="invoice-top">
+        <div>
+          <h2>KK Smart Kirana Store</h2>
+          <p>Jaipur, Rajasthan | Tax Invoice / Retail Bill</p>
+        </div>
+        <button class="btn secondary-btn" onclick="backToDashboard()">&larr; Edit Cart</button>
+      </div>
+
+      <div class="invoice-meta">
+        <div>
+          <p><strong>Bill No:</strong> <span id="invBillNo">BILL-108</span></p>
+          <p><strong>Customer:</strong> <span id="invCustName">Walk-in Customer</span></p>
+        </div>
+        <div>
+          <p><strong>Date:</strong> <span id="invDate">2026-11-19</span></p>
+          <p><strong>Mobile:</strong> <span id="invCustMobile">-</span></p>
+        </div>
+      </div>
+
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th>Item Description</th>
+            <th>Rate</th>
+            <th>Qty</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="invItemsBody"></tbody>
+      </table>
+
+      <div class="invoice-total-box">
+        <span>Grand Total Payable:</span>
+        <strong id="invFinalAmount">Rs. 0</strong>
+      </div>
+
+      <!-- Payment Mode Selection -->
+      <div class="payment-section">
+        <h4>Select Payment Method:</h4>
+        <div class="pay-btn-group">
+          <button class="btn green-btn" onclick="completePayment('Cash')">Cash Paid</button>
+          <button class="btn primary-btn" onclick="showUpiQr()">Online (UPI)</button>
+          <button class="btn orange-btn" onclick="completePayment('Pending')">Udhaar (Due)</button>
+        </div>
+      </div>
+
+      <!-- Dynamic UPI QR Box (Hidden until Online UPI is clicked) -->
+      <div id="upiQrSection" class="upi-box hidden">
+        <h4>Scan & Pay via Any UPI App</h4>
+        <p class="upi-sub">Payee: <strong>KK Smart Kirana Store</strong> | Amount: <strong id="qrPayAmount">Rs. 0</strong></p>
+        <img id="upiQrImg" src="" alt="UPI Payment QR Code">
+        <p class="upi-id-text">UPI ID: <span id="displayUpiId"></span></p>
+        <button class="btn green-btn" onclick="completePayment('Online UPI')">Payment Received - Finish Bill</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
